@@ -1,29 +1,85 @@
-%PROJECTO
+%-------------------------------------------------------------------------
+%                          PROJECTO
+%-------------------------------------------------------------------------
 
-junta([], L, L).
-junta([P | R], L1, [P | L2]) :-
-    junta(R, L1, L2).
+%junta([], L, L).
+%junta([P | R], L1, [P | L2]) :-
+%    junta(R, L1, L2).
 % junta(X, Y, Z): Z e' o resultado de juntar a lista X com Y
 
-tira_num_lista(_, [], []).
-tira_num_lista(Num, [Num|Res], Res).
-tira_num_lista(Num, [P|ListC], [P|ListS]) :-
-    tira_num_lista(Num, ListC, ListS).
+%tira_num_lista(_, [], []).
+%tira_num_lista(Num, [Num|Res], Res).
+%tira_num_lista(Num, [P|ListC], [P|ListS]) :-
+%    tira_num_lista(Num, ListC, ListS).
 % tira_num_lista(Num, Lista, N_Lista): N_Lista e' a Lista sem o Num
+
+%-------------------------------------------------------------------------
+%           Predicados para a propagacao de mudancas
+%-------------------------------------------------------------------------
 
 tira_num_aux(Num, Puz, Pos, N_Puz) :-
     puzzle_ref(Puz, Pos, Cont),
     subtract(Cont, [Num], N_Cont),
-    %tira_num_lista(Num, Cont, N_Cont),
     puzzle_muda(Puz, Pos, N_Cont, N_Puz).
 % tira_num_aux(Num, Puz, Pos, N_Puz): N_Puz e' o puzzle resultante de
-% tirar Num da posicao Pos de Puz.
+% tirar o numero Num da posicao Pos de Puz.
 
 tira_num(Num, Puz, Posicoes, N_Puz) :-
     percorre_muda_Puz(Puz, tira_num_aux(Num), Posicoes, N_Puz).
-% tira_num(Num, Puz, Posicoes, N_Puz) :
+% tira_num(Num, Puz, Posicoes, N_Puz): N_Puz e' o puzzle resultante de
+% tirar o numero Num de todas as posicoes em Posicoes do puzzle Puz.
 
-%PROJECTO
+
+%puzzle_muda_propaga(Puz, Pos, [Cont|[]], N_Puz) :- !,
+%    posicoes_relacionadas(Pos, Posicoes),
+    %puzzle_muda(Puz, Pos, [Cont], N_Puz_Int),
+%    tira_num(Cont, Puz, Posicoes, N_Puz).
+
+puzzle_muda_propaga(Puz, Pos, Cont, N_Puz) :-
+    puzzle_muda(Puz, Pos, Cont, N_Puz_Int),
+    puzzle_muda_propaga_aux(N_Puz_Int, Pos, N_Puz).
+
+%puzzle_muda_propaga_aux()
+puzzle_muda_propaga_aux(Puz, Pos, N_Puz) :-
+    puzzle_ref(Puz, Pos, Cont),
+    Cont = [_|[]],
+    posicoes_relacionadas(Pos, Posicoes),
+    tira_num(Cont, Puz, Posicoes, N_Puz_Int),
+    percorre_muda_Puz(N_Puz_Int, puzzle_muda_propaga_aux, Posicoes, N_Puz).
+
+puzzle_muda_propaga_aux(Puz, Pos, Puz) :-
+        puzzle_ref(Puz, Pos, Cont),
+        Cont = [_|[_]].
+% puzzle_muda_propaga(Puz, Pos, Cont, N_Puz): N_Puz e' o puzzle resultante
+% de subtituir a posicao Pos por Cont. No caso de Cont ser unitario,
+% propaga-se a mudanca pelas posicoes relacionadas
+
+%-------------------------------------------------------------------------
+%           Predicados para a inicializacao de puzzles
+%-------------------------------------------------------------------------
+
+possibilidades(Pos, Puz, Poss) :-
+    puzzle_ref(Puz, Pos, Cont),
+    Cont \= [_|[]],
+    numeros(L),
+    posicoes_relacionadas(Pos, Posicoes),
+    percorre_muda_Puz(Puz, unitario, Posicoes, N_Puz),
+    conteudos_posicoes(N_Puz, Posicoes, Conteudos),
+    append(Conteudos, Conteudos_juntos),
+    subtract(L, Conteudos_juntos, Poss).
+% possibilidades(Pos, Puz, Poss): Poss e' a lista de numeros possiveis para
+% a posicao Pos do puzzle Puz. Excepto se o conteudo de Pos nao e' unitario
+
+unitario(Puz, Pos, Puz) :-
+    puzzle_ref(Puz, Pos, Cont),
+    length(Cont, 1), !.
+
+unitario(Puz, Pos, N_Puz) :-
+        puzzle_muda(Puz, Pos, [], N_Puz).
+
+%-------------------------------------------------------------------------
+%                     FIM DO PROJECTO
+%-------------------------------------------------------------------------
 
 %---------------------------------------------------------------------
 %             Definicao da dimensao do puzzle
