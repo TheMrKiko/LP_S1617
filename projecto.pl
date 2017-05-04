@@ -2,17 +2,6 @@
 %                          PROJECTO
 %-------------------------------------------------------------------------
 
-%junta([], L, L).
-%junta([P | R], L1, [P | L2]) :-
-%    junta(R, L1, L2).
-% junta(X, Y, Z): Z e' o resultado de juntar a lista X com Y
-
-%tira_num_lista(_, [], []).
-%tira_num_lista(Num, [Num|Res], Res).
-%tira_num_lista(Num, [P|ListC], [P|ListS]) :-
-%    tira_num_lista(Num, ListC, ListS).
-% tira_num_lista(Num, Lista, N_Lista): N_Lista e' a Lista sem o Num
-
 %-------------------------------------------------------------------------
 %           Predicados para a propagacao de mudancas
 %-------------------------------------------------------------------------
@@ -20,7 +9,7 @@
 tira_num_aux(Num, Puz, Pos, N_Puz) :-
     puzzle_ref(Puz, Pos, Cont),
     subtract(Cont, [Num], N_Cont),
-    puzzle_muda(Puz, Pos, N_Cont, N_Puz).
+    puzzle_muda_propaga(Puz, Pos, N_Cont, N_Puz).
 % tira_num_aux(Num, Puz, Pos, N_Puz): N_Puz e' o puzzle resultante de
 % tirar o numero Num da posicao Pos de Puz.
 
@@ -29,30 +18,28 @@ tira_num(Num, Puz, Posicoes, N_Puz) :-
 % tira_num(Num, Puz, Posicoes, N_Puz): N_Puz e' o puzzle resultante de
 % tirar o numero Num de todas as posicoes em Posicoes do puzzle Puz.
 
-
-%puzzle_muda_propaga(Puz, Pos, [Cont|[]], N_Puz) :- !,
-%    posicoes_relacionadas(Pos, Posicoes),
-    %puzzle_muda(Puz, Pos, [Cont], N_Puz_Int),
-%    tira_num(Cont, Puz, Posicoes, N_Puz).
+puzzle_muda_propaga(Puz, Pos, Cont, Puz) :-
+    puzzle_ref(Puz, Pos, Cont_Atual),
+    Cont = Cont_Atual, !.
 
 puzzle_muda_propaga(Puz, Pos, Cont, N_Puz) :-
-    puzzle_muda(Puz, Pos, Cont, N_Puz_Int),
-    puzzle_muda_propaga_aux(N_Puz_Int, Pos, N_Puz).
+    Cont \= [_], !,
+    puzzle_muda(Puz, Pos, Cont, N_Puz).
 
-%puzzle_muda_propaga_aux()
-puzzle_muda_propaga_aux(Puz, Pos, N_Puz) :-
-    puzzle_ref(Puz, Pos, Cont),
-    Cont = [_|[]],
-    posicoes_relacionadas(Pos, Posicoes),
-    tira_num(Cont, Puz, Posicoes, N_Puz_Int),
-    percorre_muda_Puz(N_Puz_Int, puzzle_muda_propaga_aux, Posicoes, N_Puz).
-
-puzzle_muda_propaga_aux(Puz, Pos, Puz) :-
-        puzzle_ref(Puz, Pos, Cont),
-        Cont = [_|[_]].
+puzzle_muda_propaga(Puz, Pos, Cont, N_Puz) :-
+        Cont = [_],
+        puzzle_muda(Puz, Pos, Cont, N_Puz_Int),
+        posicoes_relacionadas(Pos, Posicoes),
+        percorre_muda_Puz(N_Puz_Int, puzzle_subtrai_propaga(Cont), Posicoes, N_Puz).
 % puzzle_muda_propaga(Puz, Pos, Cont, N_Puz): N_Puz e' o puzzle resultante
 % de subtituir a posicao Pos por Cont. No caso de Cont ser unitario,
 % propaga-se a mudanca pelas posicoes relacionadas
+
+puzzle_subtrai_propaga(Cont_a_Subtrair, Puz, Pos, N_Puz) :-
+    puzzle_ref(Puz, Pos, Cont_Atual),
+    subtract(Cont_Atual, Cont_a_Subtrair, Cont_Novo),
+    puzzle_muda_propaga(Puz, Pos, Cont_Novo, N_Puz).
+
 
 %-------------------------------------------------------------------------
 %           Predicados para a inicializacao de puzzles
@@ -60,7 +47,7 @@ puzzle_muda_propaga_aux(Puz, Pos, Puz) :-
 
 possibilidades(Pos, Puz, Poss) :-
     puzzle_ref(Puz, Pos, Cont),
-    Cont \= [_|[]],
+    Cont \= [_],
     numeros(L),
     posicoes_relacionadas(Pos, Posicoes),
     percorre_muda_Puz(Puz, unitario, Posicoes, N_Puz),
@@ -76,6 +63,29 @@ unitario(Puz, Pos, Puz) :-
 
 unitario(Puz, Pos, N_Puz) :-
         puzzle_muda(Puz, Pos, [], N_Puz).
+% unitario(Puz, Pos, N_Puz): N_Puz e' o puzzle resultante de subtituir Pos.
+% Se for unitario, deixa. Se nao, substiui por [].
+
+inicializa_aux(Puz,Pos,N_Puz):-
+    possibilidades(Pos, Puz, Poss),
+    puzzle_muda(Puz, Pos, Poss, N_Puz).
+% inicializa_aux(Puz,Pos,N_Puz): N_Puz e' o puzzle resultante de colocar em
+% Pos a lista de numeros possiveis para la. Excepto se for unitario.
+
+inicializa(Puz,N_Puz) :-
+    todas_posicoes(Posicoes),
+    percorre_muda_Puz(Puz, inicializa_aux, Posicoes, N_Puz).
+% inicializa(Puz,N_Puz): N_Puz e' o resultado de inicializar Puz.
+
+%-------------------------------------------------------------------------
+%           Predicados para a inspeccao de puzzles
+%-------------------------------------------------------------------------
+
+%so_aparece_uma_vez(Puz, Num, Posicoes, Pos_Num):-
+%    percorre_muda_Puz(Puz, , Posicoes, N_Puz)
+
+% so_aparece_uma_vez(Puz, Num, Posicoes, Pos_Num): Num so aparece numa posicao
+% de Pos, a Pos_Num.
 
 %-------------------------------------------------------------------------
 %                     FIM DO PROJECTO
