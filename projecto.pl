@@ -29,10 +29,10 @@ puzzle_muda_propaga(Puz, Pos, Cont, N_Puz) :-
 % se o conteudo novo nao for unitario, nao propaga.
 
 puzzle_muda_propaga(Puz, Pos, Cont, N_Puz) :-
-        Cont = [_],
-        puzzle_muda(Puz, Pos, Cont, N_Puz_Int),
-        posicoes_relacionadas(Pos, Posicoes),
-        percorre_muda_Puz(N_Puz_Int, puzzle_subtrai_propaga(Cont), Posicoes, N_Puz).
+    Cont = [_],
+    puzzle_muda(Puz, Pos, Cont, N_Puz_Int),
+    posicoes_relacionadas(Pos, Posicoes),
+    percorre_muda_Puz(N_Puz_Int, puzzle_subtrai_propaga(Cont), Posicoes, N_Puz).
 % puzzle_muda_propaga(Puz, Pos, Cont, N_Puz): N_Puz e' o puzzle resultante
 % de subtituir a posicao Pos por Cont. No caso de Cont ser unitario,
 % propaga-se a mudanca pelas posicoes relacionadas
@@ -51,13 +51,18 @@ puzzle_subtrai_propaga(Cont_a_Subtrair, Puz, Pos, N_Puz) :-
 
 possibilidades(Pos, Puz, Poss) :-
     puzzle_ref(Puz, Pos, Cont),
-    Cont \= [_],
+    Cont \= [_], !,
     numeros(L),
     posicoes_relacionadas(Pos, Posicoes),
     percorre_muda_Puz(Puz, unitario, Posicoes, N_Puz),
     conteudos_posicoes(N_Puz, Posicoes, Conteudos),
     append(Conteudos, Conteudos_juntos),
     subtract(L, Conteudos_juntos, Poss).
+
+possibilidades(Pos, Puz, Cont) :-
+    puzzle_ref(Puz, Pos, Cont),
+    Cont = [_].
+
 % possibilidades(Pos, Puz, Poss): Poss e' a lista de numeros possiveis para
 % a posicao Pos do puzzle Puz. Excepto se o conteudo de Pos nao e' unitario
 
@@ -66,17 +71,17 @@ unitario(Puz, Pos, Puz) :-
     length(Cont, 1), !.
 
 unitario(Puz, Pos, N_Puz) :-
-        puzzle_muda(Puz, Pos, [], N_Puz).
+    puzzle_muda(Puz, Pos, [], N_Puz).
 % unitario(Puz, Pos, N_Puz): N_Puz e' o puzzle resultante de subtituir Pos.
 % Se for unitario, deixa. Se nao, substiui por [].
 
-inicializa_aux(Puz,Pos,N_Puz):-
+inicializa_aux(Puz, Pos, N_Puz):-
     possibilidades(Pos, Puz, Poss),
     puzzle_muda_propaga(Puz, Pos, Poss, N_Puz).
 % inicializa_aux(Puz,Pos,N_Puz): N_Puz e' o puzzle resultante de colocar em
 % Pos a lista de numeros possiveis para la. Excepto se for unitario.
 
-inicializa(Puz,N_Puz) :-
+inicializa(Puz, N_Puz) :-
     todas_posicoes(Posicoes),
     percorre_muda_Puz(Puz, inicializa_aux, Posicoes, N_Puz).
 % inicializa(Puz,N_Puz): N_Puz e' o resultado de inicializar Puz.
@@ -94,64 +99,79 @@ inicializa(Puz,N_Puz) :-
 inspecciona_num(Posicoes, Puz, Num, N_Puz) :-
     so_aparece_uma_vez(Puz, Num, Posicoes, Pos_Num), !,
     puzzle_muda_propaga(Puz, Pos_Num, [Num], N_Puz).
-
 inspecciona_num(_, Puz, _, Puz).
-% inspecciona_num(Posicoes, Puz, Num, N_Puz):
+% inspecciona_num(Posicoes, Puz, Num, N_Puz): N_Puz e' o resultado de
+% inspeccionar as Posicoes para o Num. Se Num so ocorrer numa dessas posicoes
+% e se o seu conteudo nao for unitario, passa a ser. E propaga-se a mudanca.
 
 inspecciona_grupo(Puz, Grupo, N_Puz) :-
     dimensao(Nums),
     inspecciona_grupo_aux(Puz, Grupo, Nums, N_Puz).
-% inspecciona_grupo(Puz, Grupo, N_Puz):
+% inspecciona_grupo(Puz, Grupo, N_Puz): N_Puz e' o resultado de inspeccionar o
+% Puz para as posicoes em Grupo, verificando todos os numeros.
 
 inspecciona_grupo_aux(Puz, _, 0, Puz) :- !.
 inspecciona_grupo_aux(Puz, Grupo, Num, N_Puz) :-
     inspecciona_num(Grupo, Puz, Num, N_Puz_Int),
     Num_menos_1 is Num - 1,
     inspecciona_grupo_aux(N_Puz_Int, Grupo, Num_menos_1, N_Puz).
-% inspecciona_grupo_aux(Puz, Grupo, Num, N_Puz):
+% inspecciona_grupo_aux(Puz, Grupo, Num, N_Puz): N_Puz e' o resultado de
+% inspeccionar Puz para todas as Pos em Grupo para todos os numeros =< Num.
 
 inspecciona(Puz, N_Puz) :-
     grupos(Grupos),
     inspecciona_aux(Puz, Grupos, N_Puz).
-% inspecciona(Puz, N_Puz):
+% inspecciona(Puz, N_Puz): N_Puz e' o resultado de inspeccionar Puz.
 
 inspecciona_aux(Puz, [], Puz) :- !.
 inspecciona_aux(Puz, [Grupo|Resto], N_Puz) :-
     inspecciona_grupo(Puz, Grupo, N_Puz_Int),
     inspecciona_aux(N_Puz_Int, Resto, N_Puz).
-% inspecciona_aux(Puz, Grupos, N_Puz):
+% inspecciona_aux(Puz, Grupos, N_Puz): N_Puz e' o resultado de inspeccionar Puz
+% para todos os Grupos, para todas os numeros possiveis.
 
 %-------------------------------------------------------------------------
 %           Predicados para a verificacao de solucoes
 %-------------------------------------------------------------------------
-grupo_correcto(Puz, Nums, Grupos) :-
-	conteudos_posicoes(Puz, Grupos, Conteudos),
+grupo_correcto(Puz, Nums, Grupo) :-
+	conteudos_posicoes(Puz, Grupo, Conteudos),
 	msort(Nums),
 	msort(Conteudos),
 	Nums = Conteudos.
-% grupo_correcto(Puz, Nums, Grupos):
+% grupo_correcto(Puz, Nums, Grupo): o grupo de posicoes em Grupo, do Puz,
+% contem todos os numeros sem repeticoes em Nums.
 
 solucao(Puz) :-
 	numeros(Nums),
 	grupos(Grupos),
 	solucao_aux(Puz, Nums, Grupos).
-% solucao(Puz):
+% solucao(Puz): todos os grupos de Puz tem todos os numeros possiveis, unicamente.
 
 solucao_aux(_, _, []) :- !.
 solucao_aux(Puz, Nums, [C|Resto]) :-
 	grupo_correcto(Puz, Nums, C),
 	solucao_aux(Puz, Nums, Resto).
-%solucao_aux(Puz, Nums, Grupos):
+% solucao_aux(Puz, Nums, Grupos): os grupos de posicoes de Puz em Grupos tem
+% todos os Nums sem repeticoes.
 
 %-------------------------------------------------------------------------
-%                     FIM DO PROJECTO
+%                   	   Predicado resolve
+%-------------------------------------------------------------------------
+resolve(Puz, Sol) :-
+	inicializa(Puz, Puz_Inic),
+    inspecciona(Puz_Inic, Puz_Inspec).
+% resolve(Puz, Sol): Sol e' a solucao do Puz resolvido.
+
+
+%-------------------------------------------------------------------------
+%                          FIM DO PROJECTO
 %-------------------------------------------------------------------------
 
 %---------------------------------------------------------------------
 %             Definicao da dimensao do puzzle
 %---------------------------------------------------------------------
 
-dimensao(4).
+dimensao(9).
 
 %---------------------------------------------------------------------
 %
@@ -446,3 +466,8 @@ escreve_aux([H]) :- write(H),writeln(']'),!.
 escreve_aux([H|T]) :-
     write(H),writeln(','),
     escreve_aux(T).
+
+escreve_puzzle([]) :- nl.
+escreve_puzzle([Linha|Resto]) :-
+    writeln(Linha),
+    escreve_puzzle(Resto).
