@@ -100,31 +100,48 @@ inspecciona_num(_, Puz, _, Puz).
 
 inspecciona_grupo(Puz, Grupo, N_Puz) :-
     dimensao(Nums),
-    inspecciona_grupo(Puz, Grupo, Nums, N_Puz).
-
-inspecciona_grupo(Puz, _, 0, Puz) :- !.
+    inspecciona_grupo_aux(Puz, Grupo, Nums, N_Puz).
 % inspecciona_grupo(Puz, Grupo, N_Puz):
 
-inspecciona_grupo(Puz, Grupo, Num, N_Puz) :-
+inspecciona_grupo_aux(Puz, _, 0, Puz) :- !.
+inspecciona_grupo_aux(Puz, Grupo, Num, N_Puz) :-
     inspecciona_num(Grupo, Puz, Num, N_Puz_Int),
     Num_menos_1 is Num - 1,
-    inspecciona_grupo(N_Puz_Int, Grupo, Num_menos_1, N_Puz).
-% inspecciona_grupo(Puz, Grupo, Num, N_Puz):
+    inspecciona_grupo_aux(N_Puz_Int, Grupo, Num_menos_1, N_Puz).
+% inspecciona_grupo_aux(Puz, Grupo, Num, N_Puz):
 
 inspecciona(Puz, N_Puz) :-
     grupos(Grupos),
-    inspecciona(Puz, Grupos, N_Puz).
+    inspecciona_aux(Puz, Grupos, N_Puz).
 % inspecciona(Puz, N_Puz):
 
-inspecciona(Puz, [], Puz) :- !.
-inspecciona(Puz, [Grupo|Resto], N_Puz) :-
+inspecciona_aux(Puz, [], Puz) :- !.
+inspecciona_aux(Puz, [Grupo|Resto], N_Puz) :-
     inspecciona_grupo(Puz, Grupo, N_Puz_Int),
-    inspecciona(N_Puz_Int, Resto, N_Puz).
-% inspecciona(Puz, Grupos, N_Puz):
+    inspecciona_aux(N_Puz_Int, Resto, N_Puz).
+% inspecciona_aux(Puz, Grupos, N_Puz):
 
 %-------------------------------------------------------------------------
 %           Predicados para a verificacao de solucoes
 %-------------------------------------------------------------------------
+grupo_correcto(Puz, Nums, Grupos) :-
+	conteudos_posicoes(Puz, Grupos, Conteudos),
+	msort(Nums),
+	msort(Conteudos),
+	Nums = Conteudos.
+% grupo_correcto(Puz, Nums, Grupos):
+
+solucao(Puz) :-
+	numeros(Nums),
+	grupos(Grupos),
+	solucao_aux(Puz, Nums, Grupos).
+% solucao(Puz):
+
+solucao_aux(_, _, []) :- !.
+solucao_aux(Puz, Nums, [C|Resto]) :-
+	grupo_correcto(Puz, Nums, C),
+	solucao_aux(Puz, Nums, Resto).
+%solucao_aux(Puz, Nums, Grupos):
 
 %-------------------------------------------------------------------------
 %                     FIM DO PROJECTO
