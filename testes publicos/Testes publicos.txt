@@ -1,0 +1,2 @@
+Foi decidido disponibilizar alguns dos testes efectuados pelo sistema Mooshak para que os alunos consigam mais facilmente perceber alguns dos seus erros. 
+Para cada teste público poderão consultar o ficheiro de input e output correspondente. O ficheiro exemplos.pl contem os puzzles usados nos testes públicos.

@@ -1,7 +1,7 @@
 %-------------------------------------------------------------------------
 %                          PROJECTO
 %-------------------------------------------------------------------------
-
+%:- include('SUDOKU').
 %-------------------------------------------------------------------------
 %           Predicados para a propagacao de mudancas
 %-------------------------------------------------------------------------
@@ -21,10 +21,12 @@ tira_num(Num, Puz, Posicoes, N_Puz) :-
 puzzle_muda_propaga(Puz, Pos, Cont, Puz) :-
     puzzle_ref(Puz, Pos, Cont_Atual),
     Cont = Cont_Atual, !.
+% caso de paragem, se o que se for subtituir ja for o conteudo original.
 
 puzzle_muda_propaga(Puz, Pos, Cont, N_Puz) :-
     Cont \= [_], !,
     puzzle_muda(Puz, Pos, Cont, N_Puz).
+% se o conteudo novo nao for unitario, nao propaga.
 
 puzzle_muda_propaga(Puz, Pos, Cont, N_Puz) :-
         Cont = [_],
@@ -39,7 +41,9 @@ puzzle_subtrai_propaga(Cont_a_Subtrair, Puz, Pos, N_Puz) :-
     puzzle_ref(Puz, Pos, Cont_Atual),
     subtract(Cont_Atual, Cont_a_Subtrair, Cont_Novo),
     puzzle_muda_propaga(Puz, Pos, Cont_Novo, N_Puz).
-
+% puzzle_subtrai_propaga(Cont, Puz, Pos, N_Puz): determina o conteudo novo da
+% posicao Pos, com base no conteudo atual e no conteudo Cont que se pretende
+% remover, do Puz.
 
 %-------------------------------------------------------------------------
 %           Predicados para a inicializacao de puzzles
@@ -68,7 +72,7 @@ unitario(Puz, Pos, N_Puz) :-
 
 inicializa_aux(Puz,Pos,N_Puz):-
     possibilidades(Pos, Puz, Poss),
-    puzzle_muda(Puz, Pos, Poss, N_Puz).
+    puzzle_muda_propaga(Puz, Pos, Poss, N_Puz).
 % inicializa_aux(Puz,Pos,N_Puz): N_Puz e' o puzzle resultante de colocar em
 % Pos a lista de numeros possiveis para la. Excepto se for unitario.
 
@@ -86,6 +90,41 @@ inicializa(Puz,N_Puz) :-
 
 % so_aparece_uma_vez(Puz, Num, Posicoes, Pos_Num): Num so aparece numa posicao
 % de Pos, a Pos_Num.
+
+inspecciona_num(Posicoes, Puz, Num, N_Puz) :-
+    so_aparece_uma_vez(Puz, Num, Posicoes, Pos_Num), !,
+    puzzle_muda_propaga(Puz, Pos_Num, [Num], N_Puz).
+
+inspecciona_num(_, Puz, _, Puz).
+% inspecciona_num(Posicoes, Puz, Num, N_Puz):
+
+inspecciona_grupo(Puz, Grupo, N_Puz) :-
+    dimensao(Nums),
+    inspecciona_grupo(Puz, Grupo, Nums, N_Puz).
+
+inspecciona_grupo(Puz, _, 0, Puz) :- !.
+% inspecciona_grupo(Puz, Grupo, N_Puz):
+
+inspecciona_grupo(Puz, Grupo, Num, N_Puz) :-
+    inspecciona_num(Grupo, Puz, Num, N_Puz_Int),
+    Num_menos_1 is Num - 1,
+    inspecciona_grupo(N_Puz_Int, Grupo, Num_menos_1, N_Puz).
+% inspecciona_grupo(Puz, Grupo, Num, N_Puz):
+
+inspecciona(Puz, N_Puz) :-
+    grupos(Grupos),
+    inspecciona(Puz, Grupos, N_Puz).
+% inspecciona(Puz, N_Puz):
+
+inspecciona(Puz, [], Puz) :- !.
+inspecciona(Puz, [Grupo|Resto], N_Puz) :-
+    inspecciona_grupo(Puz, Grupo, N_Puz_Int),
+    inspecciona(N_Puz_Int, Resto, N_Puz).
+% inspecciona(Puz, Grupos, N_Puz):
+
+%-------------------------------------------------------------------------
+%           Predicados para a verificacao de solucoes
+%-------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------
 %                     FIM DO PROJECTO
