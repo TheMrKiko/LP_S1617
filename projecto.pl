@@ -105,7 +105,6 @@ so_aparece_uma_vez_aux(Puz, Num, [Pos|Resto], Ac, Pos_Num) :-
 
 so_aparece_uma_vez_aux(Puz, Num, [_|Resto], Ac, Pos_Num) :-
     so_aparece_uma_vez_aux(Puz, Num, Resto, Ac, Pos_Num).
-
 % so_aparece_uma_vez(Puz, Num, Posicoes, Pos_Num): Num so aparece numa posicao
 % de Pos, a Pos_Num.
 
@@ -118,7 +117,6 @@ inspecciona_num(_, Puz, _, Puz).
 % e se o seu conteudo nao for unitario, passa a ser. E propaga-se a mudanca.
 
 inspecciona_grupo(Puz, Grupo, N_Puz) :-
-    writeln('111'),
     dimensao(Nums),
     inspecciona_grupo_aux(Puz, Grupo, Nums, N_Puz).
 % inspecciona_grupo(Puz, Grupo, N_Puz): N_Puz e' o resultado de inspeccionar o
@@ -133,7 +131,6 @@ inspecciona_grupo_aux(Puz, Grupo, Num, N_Puz) :-
 % inspeccionar Puz para todas as Pos em Grupo para todos os numeros =< Num.
 
 inspecciona(Puz, N_Puz) :-
-    writeln('222'),
     grupos(Grupos),
     inspecciona_aux(Puz, Grupos, N_Puz).
 % inspecciona(Puz, N_Puz): N_Puz e' o resultado de inspeccionar Puz.
@@ -149,7 +146,6 @@ inspecciona_aux(Puz, [Grupo|Resto], N_Puz) :-
 %           Predicados para a verificacao de solucoes
 %-------------------------------------------------------------------------
 grupo_correcto(Puz, Nums, Grupo) :-
-    writeln('333'),
 	conteudos_posicoes(Puz, Grupo, Conteudos),
 	msort(Nums, Nums_sorted),
     append(Conteudos, Conteudos_app),
@@ -174,27 +170,36 @@ solucao_aux(Puz, Nums, [C|Resto]) :-
 %-------------------------------------------------------------------------
 %                   	   Predicado resolve
 %-------------------------------------------------------------------------
-resolve(Puz, Sol) :-
-	inicializa(Puz, Puz_Inic),
-    inspecciona(Puz_Inic, Sol),
-    escreve_puzzle(Sol),
-    solucao(Sol).
 
 resolve(Puz, Sol) :-
-    inicializa(Puz, Puz_Inic),
+	inicializa(Puz, Puz_Inic),
     inspecciona(Puz_Inic, Puz_Inspec),
-    pos_nao_uni(Puz_Inspec, Pos),
-    puzzle_ref(Puz_Inspec, Pos, Cont),
+    resolve_aux(Puz_Inspec, Sol).
+
+resolve_aux(Puz, Puz) :-
+%    escreve_puzzle(Puz),
+    solucao(Puz), !.
+
+resolve_aux(Puz, Sol) :-
+    pos_nao_uni(Puz, Pos),
+    puzzle_ref(Puz, Pos, Cont),
     member(Num, Cont),
-    puzzle_muda_propaga(Puz_Inspec, Pos, [Num], Sol),
-    solucao(Sol), !.
+%    write('Pos '),
+%    writeln(Pos),
+%    write('Cont '),
+%    writeln(Cont),
+%    write('Num '),
+%    writeln(Num),
+    puzzle_muda_propaga(Puz, Pos, [Num], Puz_Mudado),
+    resolve(Puz_Mudado, Sol), !.
 % resolve(Puz, Sol): Sol e' a solucao do Puz resolvido.
 
 pos_nao_uni(Puz, Pos) :-
     todas_posicoes(Todas_Posicoes),
     member(Pos, Todas_Posicoes),
     puzzle_ref(Puz, Pos, Cont),
-    Cont \= [_].
+    Cont \= [_],
+    Cont \= [].
 % pos_nao_uni(Puz, Pos): Pos e' uma posicao nao unitaria de Puz.
 
 %-------------------------------------------------------------------------
